@@ -15,6 +15,34 @@
     });
   }
 
+  var tabs = [].slice.call(document.querySelectorAll('.pick-tab'));
+  if (tabs.length) {
+    var panels = tabs.map(function (t) { return document.getElementById(t.getAttribute('aria-controls')); });
+    var show = function (i, focus) {
+      tabs.forEach(function (t, k) {
+        var on = k === i;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        panels[k].hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    };
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { show(i); });
+      t.addEventListener('keydown', function (e) {
+        var n = tabs.length, k = i;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') k = (i + 1) % n;
+        else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') k = (i + n - 1) % n;
+        else if (e.key === 'Home') k = 0;
+        else if (e.key === 'End') k = n - 1;
+        else return;
+        e.preventDefault();
+        show(k, true);
+      });
+    });
+    show(0);
+  }
+
   var form = document.getElementById('ajanlat-form');
   if (!form) return;
   var TO = form.getAttribute('data-to');
@@ -59,14 +87,14 @@
     var v = function (n) { return field(n).value.trim(); };
     var lines = [
       'Név: ' + v('nev'),
-      v('cegnev') ? 'Cégnév: ' + v('cegnev') : '',
-      v('telefon') ? 'Telefonszám: ' + v('telefon') : '',
-      v('email') ? 'E-mail: ' + v('email') : '',
-      v('telepules') ? 'Település: ' + v('telepules') : '',
+      v('cegnev') ? 'Cégnév: ' + v('cegnev') : null,
+      v('telefon') ? 'Telefonszám: ' + v('telefon') : null,
+      v('email') ? 'E-mail: ' + v('email') : null,
+      v('telepules') ? 'Település: ' + v('telepules') : null,
       'Érdeklődés: ' + v('tema'),
       '',
       v('uzenet')
-    ].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; });
+    ].filter(function (l) { return l !== null; });
     return { subject: 'Árajánlatkérés – ' + v('tema'), body: lines.join('\n') };
   }
 
